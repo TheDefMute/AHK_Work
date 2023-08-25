@@ -1,0 +1,34 @@
+Build a new file () with the results of fstrValue at the top
+	/*First lines of file */
+	SELECT	0 as flngOrder, '[fstrEnvironment]' AS fstrValue
+	UNION ALL SELECT 1 as flngOrder ,'fstrLogical=fstrPhysical' AS fstrValue
+	UNION ALL SELECT 2 as flngOrder, 'BaseEnv=' + LEFT(db_Name(),2) AS fstrValue
+	ORDER BY flngOrder
+
+
+Then under that
+
+Below is a query that builds a set of queries that will give the final results that will need to be appended to the same file under the above results.
+Run the following on the [System] database on each major server (D/T,S,P), then paste those results of column fstrValue under the results from above.
+
+	SELECT  
+			'UNION ALL 
+
+	SELECT ' + CAST(row_number() OVER (ORDER BY (Select 1)) as varchar(MAX)) + ' AS flngOrder1, 0 as flngOrder2, ''[' + fstrEnvironment + ']'' AS fstrValue
+
+	UNION ALL
+
+	SELECT '  + CAST(row_number() OVER (ORDER BY (Select 1)) as varchar(MAX)) + ' AS flngOrder1, 1 as flngOrder2, fstrLogical + ''='' + fstrServer + ''|'' + fstrPhysical
+	FROM	' + 'dbo.tblDatabase
+	WHERE	fstrEnvironment = ''' + fstrEnvironment + '''
+
+	'
+				
+	FROM (
+			SELECT 	fstrEnvironment
+			FROM	tblDatabase
+			GROUP BY fstrEnvironment
+	) AS Env(fstrEnvironment)
+
+;Todo:
+This can create duplicates...we should do something to remove them

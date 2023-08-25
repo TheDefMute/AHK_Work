@@ -1,0 +1,33 @@
+Windows (Organzie).ini will need to be filled out
+This also has some base programs used by "Programs-Generic"
+-Notepad++
+-Sticky Notes
+-One Note
+
+
+Structure of "Windows (Organzie).ini" file:
+[ProgramRun_Base]
+List of applications that you want to open when hitting Alt+Shift+F1
+Example: Title=Path to run application
+
+[ProgramRun]
+List of apps that you want to open, defined in Programs-Generic.ahk. Currently just has a few defined.
+Example: Title=Path to run application
+
+[Monitors_Any]
+[Monitors_1]
+[Monitors_2]
+[Monitors_3]
+These are list of Sections named for applications that we want to organize depending on how many monitors are setup.
+Title of the item does not matter. 
+example: Title={[Section name]} ie Application1=OneNote_MonitorCount_2
+
+
+[{SOME APP NAME}_MonitorCount_2]
+Under one of the above areas (MonitorX), you would have the following Items
+
+PosX= X location where to place the application
+PosY= Y location where to place the application
+Width= Width of the application
+Height= Height of the application
+WinMax= 0/1 should the window be maximized. If this is true, Width/height can be blank
