@@ -430,7 +430,7 @@ BuildGUI_Text(pmapHelp)
 		FileMenu.Add "Se&ttings`tCtrl+T", (*) => OpenSettings() 
 		FileMenu.Add "E&xit", (*) => GuiEscape(mygui)
 		HelpMenu := Menu()
-		HelpMenu.Add "&About", (*) => MsgBox("Contact: defmute+AHK@gmail.com")
+		HelpMenu.Add "&About", (*) => MsgBox("Contact: Powers.AdamT+AHK@gmail.com`nhttps://github.com/TheDefMute/AHK_Work")
 		Menus := MenuBar()
 		Menus.Add "&File", FileMenu  ; Attach the two submenus that were created above.
 		Menus.Add "&Help", HelpMenu
