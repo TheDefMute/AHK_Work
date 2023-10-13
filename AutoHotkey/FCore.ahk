@@ -1,221 +1,295 @@
-﻿SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
+SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 #SingleInstance force  ; Ensures that only the last executed instance of script is running
 #NoTrayIcon
 
 #Include Lib\Lib_BaseFunctions.ahk
 #Include Lib\Lib_Globals.ahk
-#Include Lib\Lib_FCore.ahk
 
 
-	global mblnGuiCreated_Core := False
+	global mblnGuiCreated_Cache := False
+	global mblnGuiCreated_Link := False
 	global mblnGuiCreated_Harness := False
 	global mblnGuiCreated_FCR := False
 
 
 
 /*
-*****************
+**********************************
 **** Core - open new instance
-*****************
+**********************************
 */
 ^!G::	;Environment - Core
 {
-	BuildGui("Core")
+	BuildGuiLink("Core")
 }	
-/*
-*****************
-**** TAP - open new instance
-*****************
-*/
-^!T::	;Environment - TAP
-{
-	BuildGui("TAP")
-
-}		
 
 /*
-*****************
+**********************************
 **** Cache  - Open cache folder
-*****************
+**********************************
 */
 ^!C::	;Folder - Cache Location
 {
-	BuildGui("Cache")
+	BuildGui_Cache("Cache")
 	
 }
-
-BuildGui(pstrTitle)
-{
-	global
-	If !(mblnGuiCreated_Core)
-	{
-		guiCore := Gui()
-		
-		global mobjTitle := guiCore.AddText("vstrTitle","Temporary Placeholder")
-		
-		guiCore.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
-		guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
-		
-		btnSubmit := guiCore.Addbutton("Default","OK")
-		
-		btnSubmit.OnEvent("Click", (*) => CoreSubmit_Click(guiCore))
-		guiCore.OnEvent("Escape", (*) => Core_Escape(guiCore))
-		
-		mblnGuiCreated_Core:=True
-	}
-	mobjTitle.Value := pstrTitle
-	guiCore.show
-	
-}
-BuildHarnessGui()
-{
-	global
-	If !(mblnGuiCreated_Harness)
-	{
-		global mguiD_Harness := Gui()
-		
-		
-		mGuiD_Harness.AddText("","Development harness")
-		mguiD_Harness.AddDropDownList("vDDL_Set Choose1", ["Prod Support","Upgrade"])
-		
-		btnServerOK := mguiD_Harness.AddButton("Default", "Input")
-		
-		btnServerOK.OnEvent("Click", D_HarnessButton_Click)
-		mguiD_Harness.OnEvent("Escape",D_HarnessGui_Escape)
-		mblnGuiCreated_Harness:=True
-	}
-	mguiD_Harness.show
-	
-}
-
-CoreSubmit_Click(pguiCore)
-{
-	SubmitInfo := pguiCore.Submit(True)
-	SWITCH mobjTitle.Value, False
-	{
-		CASE "Core":
-			strURL := FCore.GetUrlFromEnvAndSet(SubmitInfo.DDL_Set,SubmitInfo.DDL_Environment,"Core")
-			run "chrome.exe --new-window " strURL
-			
-		CASE "TAP":
-			strURL := FCore.GetUrlFromEnvAndSet(SubmitInfo.DDL_Set,SubmitInfo.DDL_Environment,"Tap")
-			run "chrome.exe --new-window " strURL
-			
-		CASE "Cache":
-			strURL := FCore.GetUrlFromEnvAndSet(SubmitInfo.DDL_Set,SubmitInfo.DDL_Environment,"CacheLoc")
-			RUN strURL
-		Default:
-			msgbox "Invalid Option"
-	}
-		
-}
-
 /*
-**************
-**** GUI Cancel
-**************
+**********************************
+**** Harness  - Open new d harness
+**********************************
 */
-Core_Escape(pguiCore)
-{
-	pguiCore.hide
-	
-}
-
-D_HarnessGui_Escape(*)	
-{
-	mGuiD_Harness.Hide
-		
-}
-	
-
 ^!D::		;Harness - Core Development
 {
 	BuildHarnessGui()
 }
-
-D_HarnessButton_Click(*)
-{
-	SubmitInfo := mGuiD_Harness.Submit(True)
-	IF (SubmitInfo.DDL_Set="Prod Support")
+;##########################################################################
+	BuildGui_Cache(pstrTitle)
 	{
-		strURL := Globals.GetGeneralConfigValue("Core-ProdSupport","Harness-Core-D")
-		run strURL
-	}
-	ELSE IF(SubmitInfo.DDL_Set="Upgrade")
-	{
-		strURL := Globals.GetGeneralConfigValue("Core-Upgrade","Harness-Core-D")
-		run strURL
-	}
-	
-}
-
-	
-^!A::		;Harness - TAP Development
-{
-
-	strURL := Globals.GetGeneralConfigValue("Core-ProdSupport","Harness-Tap-D")
-	run strURL
-	
-}
-	
-^!F::		;FCR - Harness GUI for Core/Site
-{
-
-	; strURL := Globals.GetGeneralConfigValue("FCR","FCR-Core")
-	; RUN strURL
-	global
-	If !(mblnGuiCreated_FCR)
-	{
-		guiFCR := gui("","FCR")
-		guiFCR.OnEvent("Escape", (*) => Core_Escape(guiFCR))
-		
-		guiFCR.AddText("","FCR - Selection")
-		
-		;We could do a lookup here on the ini file to see if core is configured
-		ddlChoice := guiFCR.AddDropDownList("vChoice w100")
-		if FileExist(iniRead("GeneralConfig.ini","FCR","FCR-Core"))
+		global
+		If !(mblnGuiCreated_Cache)
 		{
-			ddlChoice.Add(["Core"])
+			guiCore := Gui()
+			
+			objTitle_Cache := guiCore.AddText("vstrTitle","Temporary Placeholder")
+			
+			;After selecting one, load other options
+			guiCore.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
+			guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
+
+			
+			;#####################################################
+			;TODO: Need to rebuild settings list if path changes
+			;#####################################################
+			
+			btnSubmit := guiCore.Addbutton("Default","OK")
+			
+			btnSubmit.OnEvent("Click", (*) => CacheSubmit_Click(guiCore))
+			guiCore.OnEvent("Escape", (*) => Cache_Escape(guiCore))
+			
+			
+			objTitle_Cache.Value := pstrTitle
+			mblnGuiCreated_Cache:=true
 		}
-		ddlChoice.Add(["Site"])
-		ddlChoice.Choose(1)
-		
-		
-		btnSubmit := GuiFCR.AddButton("Default","OK")
-		btnSubmit.OnEvent("Click", (*) => FCR_Submit(guiFCR))
-		
-		mblnGuiCreated_FCR:=True
+		guiCore.show
+	
 	}
-	
-	guiFCR.Show()
-
-}
-
-; ^!L::		;FCR - Site
-; {
-	; strURL := Globals.GetGeneralConfigValue("FCR","FCR-Site")
-	; RUN strURL
-	
-; }
-
-FCR_Submit(pguiFCR)
-{
-	SubmitInfo := pguiFCR.Submit(True)
-	strURL := ""
-	SWITCH SubmitInfo.Choice
+	CacheSubmit_Click(pguiCore)
 	{
-		CASE "Core":
-			strURL := Globals.GetGeneralConfigValue("FCR","FCR-Core")
-		CASE "Site":
-			strURL := Globals.GetGeneralConfigValue("FCR","FCR-Site")
-		Default:
-			msgbox "Invalid option: " SubmitInfo.Choice
+		SubmitInfo := pguiCore.Submit(True)
+
+		strSection := NormalizeSetTitle(SubmitInfo.DDL_Set) "-Cache"
+		strKey := "CacheLoc_" SubmitInfo.DDL_Environment
+		
+		strURL := IniRead("GeneralConfig.ini",strSection,strKey)
+		RUN strURL
+			
 	}
-	RUN strURL
-	
-	
-}
-;------------------------
+	Cache_Escape(pguiCore)
+	{
+		pguiCore.hide
+		
+	}
+;##########################################################################
+
+	BuildGuiLink(pstrTitle)
+	{
+		global
+		If !(mblnGuiCreated_Link)
+		{
+			guiCore := Gui()
+			
+			objTitle := guiCore.AddText("vstrTitle","Temporary Placeholder")
+			
+			;After selecting one, load other options
+			guiCore.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
+			guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
+			guiCore.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
+
+			
+			;#####################################################
+			;TODO: Need to rebuild settings list if path changes
+			;#####################################################
+			
+			btnSubmit := guiCore.Addbutton("Default","OK")
+			
+			btnSubmit.OnEvent("Click", (*) => CoreSubmit_Click(guiCore))
+			guiCore.OnEvent("Escape", (*) => Core_Escape(guiCore))
+			
+			
+			objTitle.Value := pstrTitle
+			mblnGuiCreated_Link:=True
+		}
+		guiCore.show
+		
+	}
+	CoreSubmit_Click(pguiCore)
+	{
+		SubmitInfo := pguiCore.Submit(True)
+
+
+		strSection := NormalizeSetTitle(SubmitInfo.DDL_Set) "-Links_" SubmitInfo.DDL_Environment
+		strKey := GetSettingFromValue(SubmitInfo.DDL_Environment,SubmitInfo.DDL_Setting)
+		
+		strURL := IniRead("GeneralConfig.ini",strSection,strKey)
+		run "chrome.exe --new-window " strURL
+
+			
+	}
+	Core_Escape(pguiCore)
+	{
+		pguiCore.hide
+		
+	}
+
+;##########################################################################
+	BuildHarnessGui()
+	{
+		global
+		If !(mblnGuiCreated_Cache)
+		{
+			guiD_Harness := Gui()
+			
+			;after selecting path, load settings
+			GuiD_Harness.AddText("","Development harness")
+			guiD_Harness.AddDropDownList("vDDL_Set Choose1", ["Prod Support","Upgrade"])
+			guiD_Harness.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
+			
+			;#####################################################
+			;TODO: Need to rebuild settings list if path changes
+			;#####################################################
+			
+			btnServerOK := guiD_Harness.AddButton("Default", "Input")
+			
+			btnServerOK.OnEvent("Click", (*) => D_HarnessButton_Click(guiD_Harness))
+			guiD_Harness.OnEvent("Escape",(*) => D_HarnessGui_Escape(guiD_Harness))
+			mblnGuiCreated_Harness:=True
+		}
+		guiD_Harness.show
+		
+	}
+	D_HarnessButton_Click(pguiD_Harness)
+	{
+		SubmitInfo := pGuiD_Harness.Submit(True)
+		IF (SubmitInfo.DDL_Set="Prod Support")
+		{
+			strURL := Globals.GetGeneralConfigValue("APP-Harness","ProdSupport")
+		}
+		ELSE IF(SubmitInfo.DDL_Set="Upgrade")
+		{
+			strURL := Globals.GetGeneralConfigValue("APP-Harness","Upgrade")
+		}
+		strURL .= " "
+		strURL .= Globals.GetGeneralConfigValue("APP-Harness","AutoStart")
+		strURL .= SubmitInfo.DDL_Setting
+		run strURL
+		
+	}
+	D_HarnessGui_Escape(pguiD_Harness)	
+	{
+		pguiD_Harness.Hide
+			
+	}
+;##########################################################################
+
+;##########################################################################
+;Helpers
+	BuildSetting(pstrPath)
+	{
+		switch pstrPath
+		{
+			case "Prod Support":
+				SettingsList := IniRead("GeneralConfig.ini","ProdSupport-Settings")
+			Default:
+				SettingsList := IniRead("GeneralConfig.ini","Upgrade-Settings")
+		}
+		Settings := Array()
+		Loop Parse SettingsList, "`n","`r"
+		{
+			Settings.Push strSplit(A_LoopField,"=")[2]
+		}
+		return Settings
+	}
+	GetSettingFromValue(pstrPath,pstrValue)
+	{
+		switch pstrPath
+		{
+			case "Prod Support":
+				SettingsList := IniRead("GeneralConfig.ini","ProdSupport-Settings")
+			Default:
+				SettingsList := IniRead("GeneralConfig.ini","Upgrade-Settings")
+		}
+		Loop Parse SettingsList, "`n","`r"
+		{
+			if(pstrValue = strSplit(A_LoopField,"=")[2])
+			{
+				return strSplit(A_LoopField,"=")[1]
+			}
+		}
+	}
+	NormalizeSetTitle(pstrSet)
+	{
+		Switch pstrSet
+		{
+			Case "Prod Support":
+				return "ProdSupport"
+			Default:
+				return pstrSet
+		}
+	}
+;##########################################################################
+	^!F::		;FCR - Harness GUI for Core/Site
+	{
+
+		; strURL := Globals.GetGeneralConfigValue("FCR","FCR-Core")
+		; RUN strURL
+		global
+		If !(mblnGuiCreated_FCR)
+		{
+			guiFCR := gui("","FCR")
+			guiFCR.OnEvent("Escape", (*) => Core_Escape(guiFCR))
+			
+			guiFCR.AddText("","FCR - Selection")
+			
+			;We could do a lookup here on the ini file to see if core is configured
+			ddlChoice := guiFCR.AddDropDownList("vChoice w100")
+			if FileExist(iniRead("GeneralConfig.ini","FCR-Harness","Core"))
+			{
+				ddlChoice.Add(["Core"])
+			}
+			ddlChoice.Add(["Site"])
+			ddlChoice.Choose(1)
+			
+			
+			btnSubmit := GuiFCR.AddButton("Default","OK")
+			btnSubmit.OnEvent("Click", (*) => FCR_Submit(guiFCR))
+			
+			mblnGuiCreated_FCR:=True
+		}
+		
+		guiFCR.Show()
+
+	}
+
+
+
+	FCR_Submit(pguiFCR)
+	{
+		SubmitInfo := pguiFCR.Submit(True)
+		strURL := ""
+		SWITCH SubmitInfo.Choice
+		{
+			CASE "Core":
+				strURL := Globals.GetGeneralConfigValue("FCR-Harness","Core")
+			CASE "Site":
+				strURL := Globals.GetGeneralConfigValue("FCR-Harness","Site")
+			Default:
+				msgbox "Invalid option: " SubmitInfo.Choice
+		}
+		RUN strURL
+		
+		
+	}
+;##########################################################################
 
 ^!W::	;Window - Organize layout (Experimental)
 {
@@ -223,7 +297,7 @@ FCR_Submit(pguiFCR)
 	;set a default to get started
 	intHarnessWidth := 500 
 	
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Core")
+	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
 	WinGetPos &x,&y,&intWidth,&intWindowHeight_Core,strWindowName
 	
 	if(intWindowHeight_Core=0 OR intWindowHeight_Core = "")
@@ -241,7 +315,7 @@ FCR_Submit(pguiFCR)
 		intHarnessWidth := intwidth
 	}
 
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Site")
+	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site")
 	WinGetPos &x,&y,&intWidth,&WindowHeight_Site, strWindowName
 
 	;Attempt to get harness width again, otherwise use default...which should have already been set
@@ -263,12 +337,12 @@ FCR_Submit(pguiFCR)
 	;--------------------------------------------------
 	; Core FCR
 	;msgbox, % A_ScreenWidth " - " intHarnessWidth " - " WindowPostitionWidth " - " WindowPositionHeigth
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Core")
+	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
 	WinMove WindowPostitionWidth,WindowPositionHeigth,,,strWindowName
 
 	;--------------------------------------------------	
 	; Site FCR
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Site")
+	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site")
 	WindowPositionHeigth:=WindowPositionHeigth+intWindowHeight_Core+WindowSpaceBetween
 	WinMove WindowPostitionWidth,WindowPositionHeigth,,,strWindowName
 
@@ -276,7 +350,7 @@ FCR_Submit(pguiFCR)
 	; D environment
 	WindowPositionHeigth:=WindowPositionHeigth+WindowHeight_Site+WindowSpaceBetween
 	
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-Core-D")
+	strWindowName:=Globals.GetGeneralConfigValue("ProdSupport-Settings","Setting1")
 	WinList := WinGetList(strWindowName)
 
 	WindowPostitionWidth_tmp:= WindowPostitionWidth
@@ -293,7 +367,7 @@ FCR_Submit(pguiFCR)
 	;--------------------------------------------------
 	; D Tap
 	
-	strWindowName:=Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-TAP-D")
+	strWindowName:=Globals.GetGeneralConfigValue("ProdSupport-Settings","Setting1")
 	WindowPostitionWidth:=WindowPostitionWidth-800
 	;msgbox strWindowName " : " WinGetClass(this_id)
 
@@ -321,10 +395,20 @@ FCR_Submit(pguiFCR)
 	If strResults = "OK"
 	{
 		;If this isn't closing a window, the case on the decode might be off
-		FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-Core-D"),1,0,0,1)
-		FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-Tap-D"),1,0,0,1)
-		FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Site"),1,0,0,1)
-		FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_FCR-Core"),1,0,0,1)
+		FCoreKill(Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site"),1,0,0,1)
+		FCoreKill(Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core"),1,0,0,1)
+		
+		;Loop through settings
+		Settings := IniRead("GeneralConfig.ini", "ProdSupport-Settings")
+		Loop Parse Settings, "`n", "`r"
+		{
+			;msgbox strSplit(A_LoopField,"=")[2]
+			FCoreKill(strSplit(A_LoopField,"=")[2],1,0,0,1)
+		}
+	
+		;FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-Core-D"),1,0,0,1)
+		;FCoreKill(Globals.GetGeneralConfigValue("Core-ProdSupport-Decodes","Decode_Harness-Tap-D"),1,0,0,1)
+		
 		
 		;Temp for TN, because I ALWAYS need to open this to close my VPN after closing all harnesses
 		Run "c:\program files (x86)\cisco\cisco anyconnect secure mobility client\vpnui.exe"
@@ -351,15 +435,16 @@ FCoreKill(pstrCore,Kill:=0, Pause:=0, Suspend:=0, SelfToo:=0)
 		{
 			If Suspend
 			{
-			  PostMessage 0x111, 65305,,, this_ID  ; Suspend. 
+				PostMessage 0x111, 65305,,, this_ID  ; Suspend. 
 			}
 			If Pause
 			{
-			  PostMessage 0x111, 65306,,, this_ID  ; Pause.
+				PostMessage 0x111, 65306,,, this_ID  ; Pause.
 			}
 			If Kill
 			{
-			  WinClose this_ID ;kill
+				;msgbox "Killed: " this_class 
+				WinClose this_ID ;kill
 			}
 		}
 	}
