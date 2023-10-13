@@ -1,0 +1,46 @@
+This file determines the layout for the Generalconfig.ini file.
+
+General file layout
+	[Tab] - list of all tabs that are visibile when using the Setup_General Config gui. This is also the only section name that matters.
+
+	All other section names are not important and can be named anything, just that they cannot be the same as any other (restriction of ini files).
+	Each grouping of ini records determine the layout of the tabs.
+
+	A header record has the following fields
+		Tab=Which tab this should appear under**
+		Order=0 means header record
+		Type=Header - dictates the format.
+		Decode=What do you want displayed**
+	** These are the only two fields that should ever be edited for header records
+
+
+	While the following
+		Tab=Which tab this should appear under
+		Order= any none 0 number ditacting the order it should appear
+		Type=TextEdit/FileSelection/DirSelection
+		DisplayLength=350
+		EditLength=200
+		Decode=What do you want displayed
+		Section=Section name in file GeneralConfig.ini
+		Key=Key name in file GeneralConfig.ini
+
+For the most part it should already filled out the way you need. The only thing you MIGHT need to change is if you have multiple settings you want to configure.
+
+Example:
+By default we have 
+-Setting1 as Web.Gentax
+-Setting2 as TAP
+
+These are the settings when you open the base application (drop down choices).
+
+If you have multiple items you want to be able to choose from you just need to add them to the list
+
+For each new setting you will need to add an ini section that is a copy of the following sections
+For the Prod Support path
+	Prod SettingsX - So it knows how to start the harness
+	Prod Links_DX - So it knows the browser link to go to
+	Prod CacheX - So it knows where the cache/component folder is located
+For the Upgrade path
+	Upgrade SettingsX - So it knows how to start the harness
+	Upgrade Links_DX - So it knows the browser link to go to
+	Upgrade CacheX - So it knows where the cache/component folder is located
