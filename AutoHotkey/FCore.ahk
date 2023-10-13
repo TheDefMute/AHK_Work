@@ -48,34 +48,34 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 		global
 		If !(mblnGuiCreated_Cache)
 		{
-			guiCore := Gui()
+			guiCache := Gui()
 			
-			objTitle_Cache := guiCore.AddText("vstrTitle","Temporary Placeholder")
+			objTitle_Cache := guiCache.AddText("vstrTitle","Temporary Placeholder")
 			
 			;After selecting one, load other options
-			guiCore.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
-			guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
+			guiCache.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
+			guiCache.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
 
 			
 			;#####################################################
 			;TODO: Need to rebuild settings list if path changes
 			;#####################################################
 			
-			btnSubmit := guiCore.Addbutton("Default","OK")
+			btnSubmit := guiCache.Addbutton("Default","OK")
 			
-			btnSubmit.OnEvent("Click", (*) => CacheSubmit_Click(guiCore))
-			guiCore.OnEvent("Escape", (*) => Cache_Escape(guiCore))
+			btnSubmit.OnEvent("Click", (*) => CacheSubmit_Click(guiCache))
+			guiCache.OnEvent("Escape", (*) => Cache_Escape(guiCache))
 			
 			
 			objTitle_Cache.Value := pstrTitle
 			mblnGuiCreated_Cache:=true
 		}
-		guiCore.show
+		guiCache.show
 	
 	}
-	CacheSubmit_Click(pguiCore)
+	CacheSubmit_Click(pguiCache)
 	{
-		SubmitInfo := pguiCore.Submit(True)
+		SubmitInfo := pguiCache.Submit(True)
 
 		strSection := NormalizeSetTitle(SubmitInfo.DDL_Set) "-Cache"
 		strKey := "CacheLoc_" SubmitInfo.DDL_Environment
@@ -84,9 +84,9 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 		RUN strURL
 			
 	}
-	Cache_Escape(pguiCore)
+	Cache_Escape(pguiCache)
 	{
-		pguiCore.hide
+		pguiCache.hide
 		
 	}
 ;##########################################################################
@@ -145,7 +145,7 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 	BuildHarnessGui()
 	{
 		global
-		If !(mblnGuiCreated_Cache)
+		If !(mblnGuiCreated_Harness)
 		{
 			guiD_Harness := Gui()
 			
