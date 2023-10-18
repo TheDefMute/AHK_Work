@@ -102,9 +102,10 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 			
 			;After selecting one, load other options
 			guiCore.AddDropDownList("vDDL_Environment Choose1",["D","T","S","P"])
-			guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
-			guiCore.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
+			ddlCoreSet := guiCore.AddDropDownList("vDDL_Set Choose1",["Prod Support","Upgrade"])
+			ddlCoreSetting := guiCore.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
 
+			ddlCoreSet.OnEvent("Change", (*) => UpdateLinkSettings(ddlCoreSetting,ddlCoreSet.Text))
 			
 			;#####################################################
 			;TODO: Need to rebuild settings list if path changes
@@ -128,7 +129,7 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 
 
 		strSection := NormalizeSetTitle(SubmitInfo.DDL_Set) "-Links_" SubmitInfo.DDL_Environment
-		strKey := GetSettingFromValue(SubmitInfo.DDL_Environment,SubmitInfo.DDL_Setting)
+		strKey := GetSettingFromValue(SubmitInfo.DDL_Set,SubmitInfo.DDL_Setting)
 		
 		strURL := IniRead("GeneralConfig.ini",strSection,strKey)
 		run "chrome.exe --new-window " strURL
@@ -151,8 +152,10 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 			
 			;after selecting path, load settings
 			GuiD_Harness.AddText("","Development harness")
-			guiD_Harness.AddDropDownList("vDDL_Set Choose1", ["Prod Support","Upgrade"])
-			guiD_Harness.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
+			ddlHarnessSet := guiD_Harness.AddDropDownList("vDDL_Set Choose1", ["Prod Support","Upgrade"])
+			ddlHarnessSetting := guiD_Harness.AddDropDownList("vDDL_Setting Choose1",BuildSetting("Prod Support"))
+			
+			ddlHarnessSet.OnEvent("Change", (*)=> UpdateHarnessSettings(ddlHarnessSetting,ddlHarnessSet.Text))
 			
 			;#####################################################
 			;TODO: Need to rebuild settings list if path changes
@@ -235,6 +238,30 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 			Default:
 				return pstrSet
 		}
+	}
+	UpdateHarnessSettings(pddlHarnessSetting, pstrHarnessSetText)
+	{
+		pddlHarnessSetting.Delete
+		Switch pstrHarnessSetText
+		{
+			Case "Prod Support":
+				pddlHarnessSetting.Add(BuildSetting("Prod Support"))
+			Default:
+				pddlHarnessSetting.Add(BuildSetting("Upgrade"))
+		}
+		pddlHarnessSetting.Choose(1)
+	}
+	UpdateLinkSettings(pddlLinkSetting, pstrLinkSetText)
+	{
+		pddlLinkSetting.Delete
+		Switch pstrLinkSetText
+		{
+			Case "Prod Support":
+				pddlLinkSetting.Add(BuildSetting("Prod Support"))
+			Default:
+				pddlLinkSetting.Add(BuildSetting("Upgrade"))
+		}
+		pddlLinkSetting.Choose(1)
 	}
 ;##########################################################################
 	^!F::		;FCR - Harness GUI for Core/Site
