@@ -323,7 +323,7 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 	
 	WinList := WinGetList("ahk_exe gtgen.exe")
 	mapWin := Map()
-	mapWin.Capacity := WinList.length
+	mapWin.Capacity := WinList.length+2
 	
 
 	strCoreFCR := Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
