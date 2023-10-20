@@ -320,97 +320,75 @@ SetWorkingDir A_ScriptDir ; Ensures a consistent starting directory.
 
 ^!W::	;Window - Organize layout (Experimental)
 {
-	DetectHiddenWindows False
-	;set a default to get started
-	intHarnessWidth := 500 
 	
-	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
-	WinGetPos &x,&y,&intWidth,&intWindowHeight_Core,strWindowName
+	WinList := WinGetList("ahk_exe gtgen.exe")
+	mapWin := Map()
+	mapWin.Capacity := WinList.length
 	
-	if(intWindowHeight_Core=0 OR intWindowHeight_Core = "")
-	{
-		intWindowHeight_Core := 250
-	}
 
-	;Get harness width and set it, otherwise use a default
-	IF(intWidth = "")
-	{
-		intHarnessWidth := 500 
-	}
-	else 
-	{
-		intHarnessWidth := intwidth
-	}
+	strCoreFCR := Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
+	strSiteFCR := Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site")
 
-	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site")
-	WinGetPos &x,&y,&intWidth,&WindowHeight_Site, strWindowName
-
-	;Attempt to get harness width again, otherwise use default...which should have already been set
-	IF(intHarnessWidth=500 AND intWidth != "")
-	{
-		;Should probably check if harness width is set at all ALSO
-		intHarnessWidth := intWidth
-	}
-	
-	if(WindowHeight_Site=0)
-	{
-		WindowHeight_Site:=250
-	}
-	
-	WindowPostitionWidth := (A_ScreenWidth-intHarnessWidth)-50
-	WindowPositionHeigth := 10
-	WindowSpaceBetween := 10
-	
-	;--------------------------------------------------
-	; Core FCR
-	;msgbox, % A_ScreenWidth " - " intHarnessWidth " - " WindowPostitionWidth " - " WindowPositionHeigth
-	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Core")
-	WinMove WindowPostitionWidth,WindowPositionHeigth,,,strWindowName
-
-	;--------------------------------------------------	
-	; Site FCR
-	strWindowName:=Globals.GetGeneralConfigValue("FCR-Decode","Decode_Site")
-	WindowPositionHeigth:=WindowPositionHeigth+intWindowHeight_Core+WindowSpaceBetween
-	WinMove WindowPostitionWidth,WindowPositionHeigth,,,strWindowName
-
-	;--------------------------------------------------
-	; D environment
-	WindowPositionHeigth:=WindowPositionHeigth+WindowHeight_Site+WindowSpaceBetween
-	
-	strWindowName:=Globals.GetGeneralConfigValue("ProdSupport-Settings","Setting1")
-	WinList := WinGetList(strWindowName)
-
-	WindowPostitionWidth_tmp:= WindowPostitionWidth
+	lngCounter:=mapWin.Capacity
 	Loop WinList.length
 	{
-		;msgbox WinGetClass(WinList[A_Index])
-		;Loop through each window of this name and make them next to each other
-		this_id := "ahk_id " . WinList[A_Index]
-		WinMove WindowPostitionWidth_tmp,WindowPositionHeigth,,,this_id
-		;Update position in case of multiple windows
-		WindowPostitionWidth_tmp := WindowPostitionWidth_tmp-(intHarnessWidth+WindowSpaceBetween)
+		SWITCH WinGetTitle("ahk_ID " WinList[A_Index])
+		{
+			CASE strCoreFCR:
+				mapWin.Set(1,WinList[A_Index])
+				
+			CASE strSiteFCR:
+				mapWin.Set(2,WinList[A_Index])
+				
+			Default:
+				mapWin.Set(lngCounter,WinList[A_Index])
+				lngCounter-=1
+				
+		}
 	}
 	
-	;--------------------------------------------------
-	; D Tap
+	lngHarnessWidth := 0
+	lngHarnessHeight := 0
 	
-	strWindowName:=Globals.GetGeneralConfigValue("ProdSupport-Settings","Setting1")
-	WindowPostitionWidth:=WindowPostitionWidth-800
-	;msgbox strWindowName " : " WinGetClass(this_id)
+	lngStartPosWidth := A_ScreenWidth
+	lngStartPosHeight := 0
 
-	;WinMove WindowPostitionWidth,WindowPositionHeigth,,,strWindowName
 	
-	; WinGet, WinList, list, TAP
-	; WindowPostitionWidth_tmp:= WindowPostitionWidth
-	; Loop, %WinList%
-	; {
-		; ;Loop through each window of this name and make them next to each other
-		; this_id := "ahk_id " . WinList%A_Index%
-		; WinMove, %this_id%,,WindowPostitionWidth_tmp,WindowPositionHeigth
-		; ;Update position in case of multiple windows
-		; WindowPostitionWidth_tmp := WindowPostitionWidth_tmp-(HarnessWidth+WindowSpaceBetween)
-	; }
-	
+	for Key, WinID in mapWin
+	{
+    	
+		;Get window dimensions
+		winGetpos ,,&lngHarnessWidth,&lngHarnessHeight,"ahk_id " WinId
+		
+		;Adjust width position for initial
+		if(lngStartPosWidth = A_ScreenWidth)
+		{
+			lngStartPosWidth  -= (lngHarnessWidth+50 )
+		}
+
+		;Adjust height
+		if(lngStartPosHeight=0)
+		{
+			lngStartPosHeight := 50
+		}
+		
+		winMove lngStartPosWidth,lngStartPosHeight,,,"Ahk_ID " WinId
+		
+		;Adjust next window start position. Checking two times the current harness so that we can see if the next harness will go off screen
+		if((lngStartPosHeight+(2*lngHarnessHeight)+10) >= A_ScreenHeight)
+		{
+			;move horizontal since we are now going beyond the screen height.
+			;If it ever becomes a problem where we go OFF the screen horizontally as well, then I guess we could just reset the position and start overlaying
+			lngStartPosWidth -= (lngHarnessWidth +10)
+		}
+		Else
+		{
+			;move new starting position down
+			lngStartPosHeight += lngHarnessHeight+10
+		}
+
+	}
+
 	
 	
 }
