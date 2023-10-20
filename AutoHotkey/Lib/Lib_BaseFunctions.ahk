@@ -15,10 +15,18 @@ Class BaseFunctions
 
 	Static Clipboard_Save(var:="") ;Save clipboard information for later use.
 	{
-		;This has an issue if the clipboard is ever starting from blank.
-		Global ClipboardSaved := ClipboardAll()
-		A_Clipboard := ""
-		
+		IF(ClipboardAll().Size != 0)
+		{
+			;This has an issue if the clipboard is ever starting from blank.
+			Global ClipboardSaved := ClipboardAll()
+			A_Clipboard := ""
+		}
+		Else
+		{
+			;hacky way to get clipboard init
+			Send "^c"
+			Clipwait
+		}
 		if (var != "" )
 		{
 			A_Clipboard := var
