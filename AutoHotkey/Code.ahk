@@ -14,6 +14,11 @@ SendMode "Input"  ; Recommended for new scripts due to its superior speed and re
 {
 	BaseFunctions.SimpleSend("^+{L}Config`rComponents`rPublishables")
 }
+
+^+P:: ;Skeleton - Default parameters to bo call (Paste buffer)
+{
+	Code.DefaultBOParameter()
+}
 ;************************************
 ;** Default XML parameters **
 ;************************************
