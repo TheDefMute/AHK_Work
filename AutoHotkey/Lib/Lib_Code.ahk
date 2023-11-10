@@ -153,4 +153,67 @@ Class Code
 		
 		BaseFunctions.Clipboard_Restore()
 	}
+	
+	Static DefaultBOParameter()
+	{
+		;Use paste buffer
+		strInput := A_Clipboard
+		;Remove anything before parameters
+		strInput := RegExReplace(strInput,")^.+\(","")
+		;Remove last paran if it exists
+		strInput := RegExReplace(strInput,")(.+)\)","$1")
+		
+		strParameters := ""
+		Loop parse, strInput, "`n", "`r"
+		{
+			if(Trim(A_LoopField)="")
+			{
+				Continue
+			}
+			astrValues := []
+			astrValues := strsplit(trim(A_LoopField)," ")
+			Switch astrValues.Length
+			{
+				case 3:
+					;Assumption is that it is not using the byref/byval
+					strParameters .= astrValues[1] ":=" this.GetDefaultFromType(Trim(astrValues[3],",")) ',`r'
+					
+				case 4:
+					;Assumption is that it IS using byref/byval
+					strParameters .= astrValues[2] ":=" this.GetDefaultFromType(Trim(astrValues[4],",")) ',`r'
+					
+				Case 6:
+					;assumption is that this is an optional parameter
+					strParameters .= astrValues[2] ":=" Trim(astrValues[6],",") ',`r'
+					
+				Case 7:
+					;assumption is that this is an optional parameter
+					strParameters .= astrValues[3] ":=" Trim(astrValues[7],",") ',`r'
+					
+				Default:
+					msgbox "Line: " A_Index " has value " A_LoopField " which does not conform to the format we are expecting."
+					Exit
+			}
+		}
+		;Need to remove newline and last comma
+		strParameters := substr(strParameters,1,StrLen(strParameters)-2)
+		BaseFunctions.SimpleSend(strParameters)
+	}
+	
+	static GetDefaultFromType(pstrType)
+	{
+		Switch pstrType,0
+		{
+			case "boolean":
+				return "True"
+			case "date","datetime":
+				return "HighDate"
+			Case "int","int16","int32","int64":
+				Return "0"
+			case "string":
+				Return "String.Empty"
+			default:
+				Return "Nothing"
+		}
+	}
 }
