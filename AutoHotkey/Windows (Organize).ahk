@@ -2,6 +2,8 @@ SetWorkingDir A_ScriptDir  ; Ensures a consistent starting directory.
 #SingleInstance force  ; Ensures that only the last executed instance of script is running
 #NoTrayIcon
 
+#Include Lib\Lib_Windows (Organize) - Setup.ahk
+
 ;Todo: Check if app is there before attempting to Move
 
 !+F1::	;Open Base programs
@@ -60,6 +62,10 @@ SetWorkingDir A_ScriptDir  ; Ensures a consistent starting directory.
 		
 	OrganizeWindow(strTitle,GetPosX(strItem),GetPosY(strItem),GetWidth(strItem),GetHeight(strItem),GetWindowMax(strItem))
 
+}
+#+F6::	;Configure windows to be organized
+{
+	Windows_Organize_Setup.SetupWindowOrganize()
 }
 
 CheckStartProgram(pstrProgram,pblnCurrentWindow:=False)
